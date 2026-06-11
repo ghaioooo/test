@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة التسجيل والدخول 🧠</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center; max-width: 400px; width: 100%; }
+        h1 { color: #222; font-size: 24px; margin-bottom: 8px; }
+        p { color: #666; font-size: 14px; margin-bottom: 25px; }
+        
+        /* تصميم زر جوجل العصري */
+        .btn-google { 
+            background-color: #ffffff; color: #444; border: 1px solid #ccc; 
+            padding: 12px 20px; border-radius: 6px; font-size: 16px; font-weight: bold;
+            cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+            width: 100%; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: background 0.2s;
+        }
+        .btn-google:hover { background-color: #f9f9f9; }
+        .btn-google img { width: 22px; margin-left: 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>منصة GHK Tech للتعليم 🚀</h1>
+        <p>بوابة الدخول الآمن لكورس الذكاء الاصطناعي</p>
+        
+        <button class="btn-google" id="google-btn">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google">
+            تسجيل الدخول باستخدام حساب Google
+        </button>
+    </div>
+
+<script type="module">
+  // 1. استدعاء مكتبات الربط بين المضيف وقاعدة البيانات
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  // إعدادات الاتصال الخاصة بقاعدة بياناتك (ghkcorse)
+  const firebaseConfig = {
+    apiKey: "AIzaSyAl4__DsgwGtEji1HichoAoPnglZ7rGPRg",
+    authDomain: "ghkcorse.firebaseapp.com",
+    projectId: "ghkcorse",
+    storageBucket: "ghkcorse.firebasestorage.app",
+    messagingSenderId: "1037493023352",
+    appId: "1:1037493023352:web:c643e81766675eeb91f38d"
+  };
+
+  // تهيئة قطار الاتصال
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  // 2. مراقبة ضغط الزر وإرسال البيانات
+  document.getElementById('google-btn').addEventListener('click', async () => {
+    try {
+      // فتح نافذة جوجل الرسمية للتحقق من هوية الطالب
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user; // تم التقاط الـ باج المشفر بنجاح (UID)
+
+      // 3. كتابة البيانات فوراً في سجل الإدارة السحابي (Firestore)
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        name: user.displayName,      // الاسم من جوجل
+        email: user.email,            // الإيميل
+        role: "student",              // رتبته التلقائية في الدفتر
+        lastLogin: new Date()         // وقت الحضور والتسجيل
+      }, { merge: true });            // الدمج يحمي رتبته مستقبلاً من التصفير إذا دخل مرة أخرى
+
+      console.log("تم فحص الهوية وتسجيل الطالب بنجاح في الدفتر السحابي!");
+
+      // 4. التوجيه الذكي: إذا كان يريد صفحة معينة نرسله لها، وإلا يذهب للفهرس
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectTo = urlParams.get('redirect') || "protected.html";
+      window.location.href = redirectTo;
+
+    } catch (error) {
+      console.error("حدث خطأ في قراءة الهوية:", error);
+      alert("فشل التحقق، يرجى المحاولة مرة أخرى.");
+    }
+  });
+</script>
+
+</body>
+</html>
